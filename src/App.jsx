@@ -991,7 +991,7 @@ function Section({ title, description, children, right }) {
   );
 }
 
-function Input({ label, value, onChange, placeholder = "", type = "text", min, max, disabled = false }) {
+function Input({ label, value, onChange, placeholder = "", type = "text", min, max, disabled = false, inputMode, pattern, step }) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{label}</span>
@@ -999,6 +999,9 @@ function Input({ label, value, onChange, placeholder = "", type = "text", min, m
         type={type}
         min={min}
         max={max}
+        step={step}
+        inputMode={inputMode}
+        pattern={pattern}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
@@ -1612,7 +1615,7 @@ export default function ZLandInteractiveCharacterSheet() {
             <Section title="Identity" description="The Fall starts with normal people. Roll who they were before the world ended.">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <Input label="Character Name" value={wizard.name} onChange={(e) => setWizard((prev) => ({ ...prev, name: e.target.value }))} placeholder="Amber Hale" />
-                <Input label="Starting Age" type="number" min={18} max={90} value={wizard.age} onChange={(e) => updateWizardAge(e.target.value)} />
+                <Input label="Starting Age" type="text" inputMode="numeric" pattern="[0-9]*" min={18} max={90} value={wizard.age} onChange={(e) => updateWizardAge(e.target.value)} />
                 <Input label="Concept" value={wizard.concept} onChange={(e) => setWizard((prev) => ({ ...prev, concept: e.target.value }))} placeholder="Paramedic with trust issues" />
               </div>
               <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -1659,7 +1662,7 @@ export default function ZLandInteractiveCharacterSheet() {
             <Section title="Adulthood" description="Pick the career path term by term. Each term covers 3 years, and the player chooses the career and job for every term.">
               <div className="grid gap-4 lg:grid-cols-[220px_auto]">
                 <div className="rounded-3xl bg-zinc-950 p-4">
-                  <Input label="Target Age" type="number" min={18} max={90} value={wizard.age} onChange={(e) => updateWizardAge(e.target.value)} />
+                  <Input label="Target Age" type="text" inputMode="numeric" pattern="[0-9]*" min={18} max={90} value={wizard.age} onChange={(e) => updateWizardAge(e.target.value)} />
                   <div className="mt-4 rounded-2xl bg-zinc-900 p-4 text-sm text-zinc-300">{wizard.adulthood.summary}</div>
                   <div className="mt-3 text-sm text-zinc-500">The wizard does not choose a career path for the player here. The player selects each term manually.</div>
                 </div>
