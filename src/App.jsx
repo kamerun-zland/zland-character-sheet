@@ -357,16 +357,18 @@ function calculateWizardSkills(wizard) {
 
 function buildCharacterFromWizard(wizard) {
   const character = makeCharacter();
+  const safeAge = Math.max(18, Math.min(90, Number(wizard.age) || 18));
   const result = calculateWizardSkills(wizard);
   character.meta.characterName = wizard.name || "Unnamed Survivor";
   character.background.concept = wizard.concept;
-  character.profile.age = String(wizard.age);
+  character.profile.age = String(safeAge);
   character.profile.sex = wizard.identity.sex?.label ?? "";
   character.profile.build = wizard.identity.build?.label ?? "";
   character.profile.handedness = wizard.identity.handedness?.label ?? "";
   character.background.childhood = [wizard.childhood.parents?.label, wizard.childhood.home?.label, wizard.childhood.influence?.label].filter(Boolean).join("\n");
   character.background.teenYears = [wizard.teen.subject?.label, wizard.teen.friend?.label, wizard.teen.turning?.label].filter(Boolean).join("\n");
-  character.background.adulthood = wizard.adulthood.terms.map((term) => `${term.startAge}-${term.endAge}: ${term.career || "Unassigned"}${term.job ? ` / ${term.job}` : ""}`).join("\n");
+  character.background.adulthood = wizard.adulthood.terms.map((term) => `${term.startAge}-${term.endAge}: ${term.career || "Unassigned"}${term.job ? ` / ${term.job}` : ""}`).join("
+");
   character.background.freeTime = wizard.finishing.freeTime?.label ?? "";
   character.background.priorities = wizard.finishing.important?.label ?? "";
   character.skills = result.skills;
@@ -855,9 +857,13 @@ export default function App() {
   };
 
   const updateWizardAge = (value) => {
-    const digits = String(value).replace(/[^0-9]/g, "");
-    const safe = digits === "" ? "" : Math.max(18, Math.min(90, Number(digits)));
-    setWizard((prev) => ({ ...prev, age: safe === "" ? "" : safe, adulthood: { terms: buildAdulthoodTerms(safe === "" ? 18 : safe, prev.adulthood.terms) } }));
+    const digits = String(value).replace(/[^0-9]/g, "").slice(0, 2);
+    const numericAge = digits === "" ? 18 : Math.max(18, Math.min(90, Number(digits)));
+    setWizard((prev) => ({
+      ...prev,
+      age: digits,
+      adulthood: { terms: buildAdulthoodTerms(numericAge, prev.adulthood.terms) },
+    }));
   };
 
   const updateWizardTerm = (index, patch) => {
