@@ -367,7 +367,8 @@ function buildCharacterFromWizard(wizard) {
   character.profile.handedness = wizard.identity.handedness?.label ?? "";
   character.background.childhood = [wizard.childhood.parents?.label, wizard.childhood.home?.label, wizard.childhood.influence?.label].filter(Boolean).join("\n");
   character.background.teenYears = [wizard.teen.subject?.label, wizard.teen.friend?.label, wizard.teen.turning?.label].filter(Boolean).join("\n");
-  character.background.adulthood = wizard.adulthood.terms.map((term) => `${term.startAge}-${term.endAge}: ${term.career || "Unassigned"}${term.job ? ` / ${term.job}` : ""}`).join("\n");
+  character.background.adulthood = wizard.adulthood.terms.map((term) => `${term.startAge}-${term.endAge}: ${term.career || "Unassigned"}${term.job ? ` / ${term.job}` : ""}`).join("
+");
   character.background.freeTime = wizard.finishing.freeTime?.label ?? "";
   character.background.priorities = wizard.finishing.important?.label ?? "";
   character.skills = result.skills;
@@ -885,7 +886,479 @@ export default function App() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12),_transparent_35%),linear-gradient(180deg,_#0a0a0a_0%,_#111111_100%)] pb-24 text-white md:pb-0">
       <style>{`input, select, textarea { font-size: 16px; } button { touch-action: manipulation; } @media (min-width: 640px) { input, select, textarea { font-size: 14px; } }`}</style>
 
-      <div className="p-8 text-zinc-300">Restore base loaded. Replace this placeholder return body with the rest of the previous UI if you want me to continue from this exact base.</div>
+      {appMode === "home" ? (
+        <div className="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:px-8">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="w-full overflow-hidden rounded-[32px] border border-zinc-800 bg-zinc-900/85 p-6 shadow-2xl backdrop-blur sm:p-8">
+            <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr] xl:items-center">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">Z-LAND • The Fall</div>
+                <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl">{APP_TITLE}</h1>
+                <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">Fresh rebuild for stability, mobile-friendly age entry, and a corrected wound silhouette.</p>
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  <button className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-4 text-sm font-semibold text-black hover:bg-emerald-400" onClick={startWizard}><WandSparkles className="h-4 w-4" /> Create with Wizard</button>
+                  <button className={`inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-semibold ${hasSavedCharacter ? "bg-zinc-800 text-white hover:bg-zinc-700" : "cursor-not-allowed bg-zinc-900 text-zinc-600"}`} disabled={!hasSavedCharacter} onClick={openSavedCharacter}><Save className="h-4 w-4" /> Open Saved</button>
+                  <button className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-zinc-800 px-4 py-4 text-sm font-semibold text-white hover:bg-zinc-700" onClick={() => fileInputRef.current?.click()}><Upload className="h-4 w-4" /> Import File</button>
+                </div>
+                <input ref={fileInputRef} type="file" accept="application/json" onChange={handleImport} className="hidden" />
+              </div>
+              <div className="grid gap-4">
+                <div className="rounded-[28px] border border-zinc-800 bg-zinc-950/80 p-5 shadow-xl">
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Rebuild focus</div>
+                  <div className="mt-4 grid gap-3 text-sm text-zinc-300">
+                    <div className="rounded-2xl bg-zinc-900 p-4">Numeric mobile age entry in wizard</div>
+                    <div className="rounded-2xl bg-zinc-900 p-4">Cleaner clickable body silhouette</div>
+                    <div className="rounded-2xl bg-zinc-900 p-4">Centered skill and combat roll popup</div>
+                    <div className="rounded-2xl bg-zinc-900 p-4">Same player-facing Fall-era workflow</div>
+                  </div>
+                </div>
+                <DiceWidget />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      ) : null}
+
+      {appMode === "wizard" ? (
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6 overflow-hidden rounded-[32px] border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl backdrop-blur">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">The Fall Character Wizard</div>
+                <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">{APP_TITLE}</h1>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400 sm:text-base">Players can type age directly now on mobile instead of relying on the number spinner.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-700" onClick={() => setAppMode("home")}><ChevronLeft className="h-4 w-4" /> Back</button>
+                {wizardStep > 0 ? <button className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-700" onClick={() => setWizardStep((prev) => Math.max(0, prev - 1))}><ChevronLeft className="h-4 w-4" /> Previous</button> : null}
+                {wizardStep < wizardSteps.length - 1 ? <button className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => setWizardStep((prev) => Math.min(wizardSteps.length - 1, prev + 1))}>Next <ChevronRight className="h-4 w-4" /></button> : <button className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => { setCharacter(buildCharacterFromWizard(wizard)); setAppMode("sheet"); setActiveTab("overview"); }}><WandSparkles className="h-4 w-4" /> Create Character</button>}
+              </div>
+            </div>
+            <div className="mt-5 flex gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-6 md:overflow-visible md:pb-0">
+              {wizardSteps.map((step, index) => <button key={step} onClick={() => setWizardStep(index)} className={`whitespace-nowrap rounded-2xl px-3 py-3 text-sm font-semibold ${wizardStep === index ? "bg-emerald-500 text-black" : "bg-zinc-950 text-zinc-300 hover:bg-zinc-800"}`}>{index + 1}. {step}</button>)}
+            </div>
+          </motion.div>
+
+          <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+            <div className="space-y-6">
+              {wizardStep === 0 ? (
+                <Section title="Identity" description="Start the survivor as a normal person before the Fall.">
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <Input label="Character Name" value={wizard.name} onChange={(e) => setWizard((prev) => ({ ...prev, name: e.target.value }))} placeholder="Amber Hale" />
+                    <Input label="Starting Age" type="text" inputMode="numeric" pattern="[0-9]*" value={wizard.age} onChange={(e) => updateWizardAge(e.target.value)} placeholder="24" />
+                    <Input label="Concept" value={wizard.concept} onChange={(e) => setWizard((prev) => ({ ...prev, concept: e.target.value }))} placeholder="Paramedic with trust issues" />
+                  </div>
+                  <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <QuestionCard title="Sex" value={wizard.identity.sex} options={sexOptions} onChange={(choice) => setWizard((prev) => ({ ...prev, identity: { ...prev.identity, sex: choice } }))} />
+                    <QuestionCard title="Body Type" value={wizard.identity.build} options={(wizard.identity.sex?.label ?? "Male") === "Female" ? bodyOptionsFemale : bodyOptionsMale} onChange={(choice) => setWizard((prev) => ({ ...prev, identity: { ...prev.identity, build: choice } }))} note="Uses the male or female table based on sex." />
+                    <QuestionCard title="Handedness" value={wizard.identity.handedness} options={handednessOptions} onChange={(choice) => setWizard((prev) => ({ ...prev, identity: { ...prev.identity, handedness: choice } }))} />
+                  </div>
+                </Section>
+              ) : null}
+
+              {wizardStep === 1 ? (
+                <Section title="Childhood" description="Pick or roll the broad beats of early life.">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {simpleQuestionSet.childhood.map((entry) => <QuestionCard key={entry.key} title={entry.title} value={wizard.childhood[entry.key]} options={entry.options} onChange={(choice) => setWizard((prev) => ({ ...prev, childhood: { ...prev.childhood, [entry.key]: choice } }))} />)}
+                  </div>
+                </Section>
+              ) : null}
+
+              {wizardStep === 2 ? (
+                <Section title="Teen Years" description="School, relationships, and the turning point into adulthood.">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {simpleQuestionSet.teen.map((entry) => <QuestionCard key={entry.key} title={entry.title} value={wizard.teen[entry.key]} options={entry.options} onChange={(choice) => setWizard((prev) => ({ ...prev, teen: { ...prev.teen, [entry.key]: choice } }))} />)}
+                  </div>
+                </Section>
+              ) : null}
+
+              {wizardStep === 3 ? (
+                <Section title="Adulthood" description="Players choose the career path for every job term.">
+                  <div className="grid gap-4 lg:grid-cols-[220px_auto]">
+                    <div className="rounded-3xl bg-zinc-950 p-4">
+                      <Input label="Target Age" type="text" inputMode="numeric" pattern="[0-9]*" value={wizard.age} onChange={(e) => updateWizardAge(e.target.value)} placeholder="24" />
+                      <div className="mt-4 rounded-2xl bg-zinc-900 p-4 text-sm text-zinc-300">{wizard.adulthood.terms.length} term{wizard.adulthood.terms.length === 1 ? "" : "s"} from age 18 to {wizard.age || 18}.</div>
+                    </div>
+                    <div className="rounded-3xl bg-zinc-950 p-4">
+                      <div className="space-y-4">
+                        {wizard.adulthood.terms.map((term, index) => {
+                          const career = adulthoodCareers.find((entry) => entry.career === term.career);
+                          return (
+                            <div key={term.index} className="rounded-2xl bg-zinc-900 p-4">
+                              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                  <div className="font-semibold text-white">Term {term.index}</div>
+                                  <div className="text-sm text-zinc-500">Age {term.startAge}-{term.endAge}</div>
+                                </div>
+                                <div className="rounded-full bg-zinc-950 px-3 py-1 text-xs uppercase tracking-[0.18em] text-zinc-400">{term.skill || "No skill yet"}</div>
+                              </div>
+                              <div className="grid gap-3 lg:grid-cols-[1fr_1fr_120px_auto]">
+                                <label className="block">
+                                  <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Career</span>
+                                  <select value={term.career} onChange={(e) => updateWizardTerm(index, { career: e.target.value, job: "", skill: "" })} className="min-h-[48px] w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 sm:text-sm">
+                                    <option value="">Choose career...</option>
+                                    {adulthoodCareers.map((entry) => <option key={entry.career} value={entry.career}>{entry.career}</option>)}
+                                  </select>
+                                </label>
+                                <label className="block">
+                                  <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Job</span>
+                                  <select value={term.job} disabled={!career} onChange={(e) => updateWizardTerm(index, { job: e.target.value })} className="min-h-[48px] w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 disabled:opacity-50 sm:text-sm">
+                                    <option value="">Choose job...</option>
+                                    {(career?.jobs ?? []).map((job) => <option key={job.name} value={job.name}>{job.name}</option>)}
+                                  </select>
+                                </label>
+                                <Input label="Gain" type="number" min={0} max={5} value={term.gain} onChange={(e) => updateWizardTerm(index, { gain: Math.max(0, Math.min(5, Number(e.target.value) || 0)) })} />
+                                <div className="flex items-end"><button className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => updateWizardTerm(index, { gain: rollDie(5) })}><Dices className="h-4 w-4" /> Roll d5</button></div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </Section>
+              ) : null}
+
+              {wizardStep === 4 ? (
+                <Section title="Finishing" description="Round out who they were before the world fell apart.">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {simpleQuestionSet.finishing.map((entry) => <QuestionCard key={entry.key} title={entry.title} value={wizard.finishing[entry.key]} options={entry.options} onChange={(choice) => setWizard((prev) => ({ ...prev, finishing: { ...prev.finishing, [entry.key]: choice } }))} />)}
+                  </div>
+                </Section>
+              ) : null}
+
+              {wizardStep === 5 ? (
+                <Section title="Review" description="Preview the generated skill spread before opening the full sheet.">
+                  <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+                    <div className="space-y-4">
+                      <div className="rounded-3xl bg-zinc-950 p-4">
+                        <div className="text-xs uppercase tracking-[0.18em] text-zinc-500">Identity</div>
+                        <div className="mt-2 text-lg font-bold text-white">{wizard.name || "Unnamed Survivor"}</div>
+                        <div className="mt-1 text-sm text-zinc-400">Age {wizard.age || 18} • {wizard.identity.sex?.label || "?"} • {wizard.identity.build?.label || "?"}</div>
+                        {wizard.concept ? <div className="mt-3 rounded-2xl bg-zinc-900 p-3 text-sm text-zinc-300">{wizard.concept}</div> : null}
+                      </div>
+                      <div className="rounded-3xl bg-zinc-950 p-4 text-sm text-zinc-300 whitespace-pre-wrap">
+                        {[wizard.childhood.parents?.label, wizard.childhood.home?.label, wizard.childhood.influence?.label, wizard.teen.subject?.label, wizard.teen.friend?.label, wizard.teen.turning?.label].filter(Boolean).join("\n") || "No life path details yet."}
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="rounded-3xl bg-zinc-950 p-4">
+                        <div className="text-xs uppercase tracking-[0.18em] text-zinc-500">Generated skills</div>
+                        <div className="mt-3 grid gap-2 md:grid-cols-2">
+                          {skillOrder.map((skill) => <div key={skill} className="flex items-center justify-between rounded-2xl bg-zinc-900 px-3 py-2 text-sm text-zinc-300"><span>{skill}</span><span className="font-semibold text-white">{wizardPreview.skills[skill]}</span></div>)}
+                        </div>
+                      </div>
+                      <div className="rounded-3xl bg-zinc-950 p-4">
+                        <div className="text-xs uppercase tracking-[0.18em] text-zinc-500">Applied bonuses</div>
+                        <div className="mt-3 space-y-2 text-sm text-zinc-300 max-h-[280px] overflow-auto">
+                          {wizardPreview.log.length === 0 ? <div className="text-zinc-500">No gains yet.</div> : wizardPreview.log.map((entry, i) => <div key={i} className="rounded-2xl bg-zinc-900 p-3">{entry}</div>)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Section>
+              ) : null}
+            </div>
+            <div className="space-y-6">
+              <Section title="Wizard Notes" description="The Fall only.">
+                <div className="space-y-3 text-sm text-zinc-300">
+                  <div className="rounded-2xl bg-zinc-950 p-4">All skills begin at 30.</div>
+                  <div className="rounded-2xl bg-zinc-950 p-4">Life-path results grant +1d5 to listed skills.</div>
+                  <div className="rounded-2xl bg-zinc-950 p-4">Players choose adulthood jobs manually.</div>
+                  <div className="rounded-2xl bg-zinc-950 p-4">Age fields support mobile typing now.</div>
+                </div>
+              </Section>
+              <DiceWidget />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {appMode === "sheet" ? (
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6 overflow-hidden rounded-[32px] border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl backdrop-blur">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">Z-LAND Interactive Character Sheet • The Fall</div>
+                <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">{APP_TITLE}</h1>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400 sm:text-base">Fresh rebuild with corrected mobile age typing and a cleaner health silhouette.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400" onClick={saveNow}><Save className="h-4 w-4" /> Save</button>
+                <button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-700" onClick={handleExport}><Download className="h-4 w-4" /> Export</button>
+                <button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-700" onClick={() => fileInputRef.current?.click()}><Upload className="h-4 w-4" /> Import</button>
+                <button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-700" onClick={startWizard}><WandSparkles className="h-4 w-4" /> Wizard</button>
+                <button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-700" onClick={() => setAppMode("home")}><User className="h-4 w-4" /> Home</button>
+                <button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-red-600" onClick={resetAll}><RotateCcw className="h-4 w-4" /> New</button>
+                <input ref={fileInputRef} type="file" accept="application/json" onChange={handleImport} className="hidden" />
+              </div>
+            </div>
+            <div className="mt-4 text-sm text-zinc-500">{saveState}</div>
+          </motion.div>
+
+          <div className="mb-6 hidden flex-wrap gap-2 md:flex">
+            {tabList.map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.key;
+              return <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`inline-flex min-h-[44px] items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold ${active ? "bg-emerald-500 text-black" : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800"}`}><Icon className="h-4 w-4" /> {tab.label}</button>;
+            })}
+          </div>
+
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pb-28 md:pb-12">
+            {activeTab === "overview" ? (
+              <div className="grid gap-6 xl:grid-cols-[1.35fr_0.85fr]">
+                <div className="space-y-6">
+                  <Section title="Identity" description="Core sheet fields plus a quick archetype loader." right={<select value={character.meta.archetype} onChange={(e) => { setMeta({ archetype: e.target.value }); if (e.target.value) applyArchetype(e.target.value); }} className="min-h-[44px] rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-base text-white outline-none focus:border-emerald-500 sm:text-sm"><option value="">Apply archetype...</option>{Object.keys(archetypes).map((name) => <option key={name} value={name}>{name}</option>)}</select>}>
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      <Input label="Character Name" value={character.meta.characterName} onChange={(e) => setMeta({ characterName: e.target.value })} />
+                      <Input label="Era" value={character.meta.era} onChange={(e) => setMeta({ era: e.target.value })} />
+                      <Input label="Hometown" value={character.profile.hometown} onChange={(e) => setProfile({ hometown: e.target.value })} />
+                      <Input label="Sex" value={character.profile.sex} onChange={(e) => setProfile({ sex: e.target.value })} />
+                      <Input label="Age" value={character.profile.age} onChange={(e) => setProfile({ age: e.target.value })} />
+                      <Input label="Build" value={character.profile.build} onChange={(e) => setProfile({ build: e.target.value })} />
+                      <Input label="Handedness" value={character.profile.handedness} onChange={(e) => setProfile({ handedness: e.target.value })} />
+                      <Input label="Skin Colour" value={character.profile.skinColour} onChange={(e) => setProfile({ skinColour: e.target.value })} />
+                      <Input label="Hair Colour" value={character.profile.hairColour} onChange={(e) => setProfile({ hairColour: e.target.value })} />
+                      <Input label="Eye Colour" value={character.profile.eyeColour} onChange={(e) => setProfile({ eyeColour: e.target.value })} />
+                      <div className="md:col-span-2 xl:col-span-3"><Input label="Concept / Pitch" value={character.background.concept} onChange={(e) => setBackground({ concept: e.target.value })} /></div>
+                    </div>
+                  </Section>
+                  <Section title="Life Path Notes" description="Editable notes produced by the wizard.">
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <TextArea label="Childhood" value={character.background.childhood} onChange={(e) => setBackground({ childhood: e.target.value })} />
+                      <TextArea label="Teen Years" value={character.background.teenYears} onChange={(e) => setBackground({ teenYears: e.target.value })} />
+                      <TextArea label="Adulthood" value={character.background.adulthood} onChange={(e) => setBackground({ adulthood: e.target.value })} />
+                      <TextArea label="Loved Ones / Priorities" value={character.background.lovedOnes} onChange={(e) => setBackground({ lovedOnes: e.target.value })} />
+                    </div>
+                  </Section>
+                </div>
+                <div className="space-y-6">
+                  <Section title="Portrait" description="Upload a portrait up to 2 MB.">
+                    <div className="space-y-4">
+                      <div className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950">
+                        {character.meta.portraitData ? <img src={character.meta.portraitData} alt="Portrait" className="aspect-[3/4] w-full object-cover" /> : <div className="flex aspect-[3/4] items-center justify-center text-sm text-zinc-500">No portrait uploaded yet.</div>}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => portraitInputRef.current?.click()}><Upload className="h-4 w-4" /> Upload Portrait</button>
+                        {character.meta.portraitData ? <button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-red-600" onClick={() => setMeta({ portraitData: "", portraitName: "" })}><Trash2 className="h-4 w-4" /> Remove</button> : null}
+                      </div>
+                      <input ref={portraitInputRef} type="file" accept="image/*" onChange={handlePortraitUpload} className="hidden" />
+                    </div>
+                  </Section>
+                  <Section title="Snapshot" description="Quick play values.">
+                    <div className="grid gap-3">
+                      {[{ label: "Physical wound slots / location", value: constitutionSlots, hint: "Based on Constitution" }, { label: "Mental wound slots / severity", value: willSlots, hint: "Based on Will" }, { label: "Current Sigils", value: currentSigils, hint: `Threshold ${sigilThreshold}` }].map((card) => <div key={card.label} className="rounded-2xl bg-zinc-950 p-4"><div className="text-xs uppercase tracking-[0.18em] text-zinc-500">{card.label}</div><div className="mt-2 text-2xl font-black text-white">{card.value}</div><div className="mt-1 text-sm text-zinc-400">{card.hint}</div></div>)}
+                    </div>
+                  </Section>
+                  <DiceWidget />
+                </div>
+              </div>
+            ) : null}
+
+            {activeTab === "skills" ? (
+              <div className="space-y-6">
+                <Section title="Skill Roller" description="Set a manual modifier first, then roll any skill. Survival, mental, and wealth penalties are already included.">
+                  <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="rounded-3xl bg-zinc-950 p-4">
+                        <div className="mb-2 text-xs uppercase tracking-[0.18em] text-zinc-500">Current Sigils</div>
+                        <div className="flex items-center justify-between gap-4">
+                          <div><div className="text-3xl font-black text-white">{currentSigils}</div><div className="text-sm text-zinc-400">Threshold {sigilThreshold}</div></div>
+                          <div className="flex gap-2"><button className="h-11 w-11 rounded-2xl bg-zinc-800 text-white hover:bg-zinc-700" onClick={() => setResources({ currentSigils: Math.max(0, currentSigils - 1) })}>-</button><button className="h-11 w-11 rounded-2xl bg-zinc-800 text-white hover:bg-zinc-700" onClick={() => setResources({ currentSigils: currentSigils + 1 })}>+</button></div>
+                        </div>
+                        <button className="mt-3 inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-700" onClick={() => setResources({ currentSigils: sigilThreshold })}>Reset to Threshold</button>
+                      </div>
+                      <div className="rounded-3xl bg-zinc-950 p-4">
+                        <Input label="Manual Modifier" type="number" value={skillRollModifier} onChange={(e) => setSkillRollModifier(Number(e.target.value) || 0)} />
+                        <button className={`mt-3 inline-flex min-h-[48px] items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold ${queuedSigilBonus ? "bg-amber-500 text-black" : "bg-zinc-800 text-white hover:bg-zinc-700"}`} onClick={() => { if (!queuedSigilBonus && currentSigils <= 0) return; setQueuedSigilBonus((prev) => !prev); }}><Crosshair className="h-4 w-4" /> {queuedSigilBonus ? "Sigil +25 Armed" : "Arm Sigil +25"}</button>
+                      </div>
+                    </div>
+                    <div className="rounded-3xl bg-zinc-950 p-4 text-sm text-zinc-400">Roll results now appear in a centered popup so players do not have to scroll.</div>
+                  </div>
+                </Section>
+                <Section title="Skills" description="Base value, effective value, and one-click rolling.">
+                  <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+                    {skillOrder.map((skill) => {
+                      const base = character.skills[skill] ?? 0;
+                      const effective = computed.effectiveSkills[skill] ?? 0;
+                      const isPhysical = physicalSkills.has(skill);
+                      const isMental = mentalAffectedSkills.has(skill);
+                      return (
+                        <div key={skill} className="rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
+                          <div className="mb-3 flex items-start justify-between gap-3">
+                            <div>
+                              <div className="text-base font-bold text-white">{skill}</div>
+                              <div className="mt-1 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.16em]">
+                                <span className={`rounded-full px-2 py-1 ${isPhysical ? "bg-emerald-500/20 text-emerald-300" : "bg-blue-500/20 text-blue-300"}`}>{isPhysical ? "Physical" : "Non-Physical"}</span>
+                                {isMental ? <span className="rounded-full bg-amber-500/20 px-2 py-1 text-amber-300">Mental affected</span> : null}
+                              </div>
+                            </div>
+                            <div className="rounded-2xl bg-zinc-900 px-3 py-2 text-right"><div className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Effective</div><div className="text-xl font-black text-white">{effective}</div></div>
+                          </div>
+                          <div className="mb-4 flex items-center justify-between"><span className="text-sm text-zinc-400">Base value</span><NumberStepper value={base} onChange={(value) => updateSkill(skill, value)} /></div>
+                          <button className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => rollSkillCheck(skill)}><Dices className="h-4 w-4" /> Roll {skill}</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Section>
+              </div>
+            ) : null}
+
+            {activeTab === "combat" ? (
+              <div className="space-y-6">
+                <Section title="Combat Rolls" description="Core combat modifier toggles, defense rolls, and weapons.">
+                  <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+                    <div className="grid gap-4">
+                      {[
+                        ["Ranged Attack", "rangedAttack", [{ key: "inMelee", label: "In melee" }, { key: "movingQuickly", label: "Moving quickly" }, { key: "offHanded", label: "Off-handed weapon" }, { key: "firingBlindly", label: "Firing blindly" }, { key: "aimed", label: "Aimed" }, { key: "areaOfEffect", label: "Area of effect" }]],
+                        ["Ranged Defense", "rangedDefense", [{ key: "inMelee", label: "In melee" }, { key: "movingQuickly", label: "Moving quickly" }, { key: "areaOfEffect", label: "Area of effect" }, { key: "dodge", label: "Dodge" }, { key: "surprised", label: "Surprised" }, { key: "inCover", label: "In cover" }]],
+                        ["Melee Attack", "meleeAttack", [{ key: "charging", label: "Charging" }, { key: "superiorPosition", label: "Superior position" }, { key: "offHanded", label: "Off-handed weapon" }, { key: "aimed", label: "Aimed" }, { key: "flankingAllies", label: "Allies flanking", type: "count" }]],
+                        ["Melee Defense", "meleeDefense", [{ key: "parry", label: "Parry" }, { key: "superiorPosition", label: "Superior position" }, { key: "offHanded", label: "Off-handed weapon" }, { key: "dodge", label: "Dodge" }, { key: "flankingEnemies", label: "Enemies flanking", type: "count" }]],
+                      ].map(([title, section, fields]) => {
+                        const values = character.combat.modifiers[section];
+                        const total = getCombatModifierTotal(section);
+                        return (
+                          <div key={section} className="rounded-3xl bg-zinc-950 p-4">
+                            <div className="mb-3 flex items-start justify-between gap-3"><div><div className="text-base font-bold text-white">{title}</div></div><div className="rounded-2xl bg-zinc-900 px-3 py-2 text-right"><div className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Total</div><div className="text-xl font-black text-white">{total >= 0 ? `+${total}` : total}</div></div></div>
+                            <div className="grid gap-2 md:grid-cols-2">
+                              {fields.map((field) => <label key={field.key} className="flex min-h-[52px] items-center justify-between gap-3 rounded-2xl bg-zinc-900 px-3 py-3 text-sm text-zinc-300"><span>{field.label}</span>{field.type === "count" ? <input type="number" min={0} value={values[field.key]} onChange={(e) => setCombat({ modifiers: { ...character.combat.modifiers, [section]: { ...values, [field.key]: clampNonNegative(e.target.value) } } })} className="h-11 w-20 rounded-xl border border-zinc-800 bg-zinc-950 px-2 py-2 text-center text-base text-white outline-none focus:border-emerald-500 sm:text-sm" /> : <input type="checkbox" checked={values[field.key]} onChange={(e) => setCombat({ modifiers: { ...character.combat.modifiers, [section]: { ...values, [field.key]: e.target.checked } } })} className="h-4 w-4 rounded border-zinc-700 bg-zinc-950 text-emerald-500" />}</label>)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="space-y-4">
+                      <div className="rounded-3xl bg-zinc-950 p-4">
+                        <div className="mb-3 text-sm font-semibold text-white">Quick defense rolls</div>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div className="rounded-2xl bg-zinc-900 p-3">
+                            <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Ranged defense skill</span><select value={character.combat.defenseSkills.ranged} onChange={(e) => setCombat({ defenseSkills: { ...character.combat.defenseSkills, ranged: e.target.value } })} className="min-h-[48px] w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 sm:text-sm">{skillOrder.map((skill) => <option key={skill} value={skill}>{skill}</option>)}</select></label>
+                            <button className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => rollCombatDefense("ranged")}><Dices className="h-4 w-4" /> Roll Ranged Defense</button>
+                          </div>
+                          <div className="rounded-2xl bg-zinc-900 p-3">
+                            <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Melee defense skill</span><select value={character.combat.defenseSkills.melee} onChange={(e) => setCombat({ defenseSkills: { ...character.combat.defenseSkills, melee: e.target.value } })} className="min-h-[48px] w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 sm:text-sm">{skillOrder.map((skill) => <option key={skill} value={skill}>{skill}</option>)}</select></label>
+                            <button className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => rollCombatDefense("melee")}><Dices className="h-4 w-4" /> Roll Melee Defense</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Section>
+
+                <Section title="Weapons" description="Add weapons, assign skills, and roll attacks." right={<div className="flex gap-2"><button className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => setCombat({ weapons: [...character.combat.weapons, makeWeapon("ranged")] })}><Plus className="h-4 w-4" /> Ranged</button><button className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => setCombat({ weapons: [...character.combat.weapons, makeWeapon("melee")] })}><Plus className="h-4 w-4" /> Melee</button></div>}>
+                  <div className="space-y-3">
+                    {character.combat.weapons.map((weapon, index) => (
+                      <div key={index} className="rounded-2xl bg-zinc-950 p-4">
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.2fr_120px_120px_120px_140px_auto]">
+                          <Input label="Weapon" value={weapon.name} onChange={(e) => setCombat({ weapons: arrayUpdate(character.combat.weapons, index, { name: e.target.value }) })} />
+                          <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Class</span><select value={weapon.weightClass} onChange={(e) => { const weightClass = e.target.value; setCombat({ weapons: arrayUpdate(character.combat.weapons, index, { weightClass, damage: weaponClassData[weightClass].damage, woundMod: weaponClassData[weightClass].woundMod }) }); }} className="min-h-[48px] w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 sm:text-sm">{Object.keys(weaponClassData).map((key) => <option key={key} value={key}>{key}</option>)}</select></label>
+                          <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Category</span><select value={weapon.category} onChange={(e) => setCombat({ weapons: arrayUpdate(character.combat.weapons, index, { category: e.target.value, skill: e.target.value === "ranged" ? "Shoot" : "Fight", rangeBand: e.target.value === "ranged" ? "Medium" : "Close" }) })} className="min-h-[48px] w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 sm:text-sm"><option value="ranged">Ranged</option><option value="melee">Melee</option></select></label>
+                          <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Range</span><select value={weapon.rangeBand} onChange={(e) => setCombat({ weapons: arrayUpdate(character.combat.weapons, index, { rangeBand: e.target.value }) })} className="min-h-[48px] w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 sm:text-sm">{rangeBands.map((band) => <option key={band} value={band}>{band}</option>)}</select></label>
+                          <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Assigned Skill</span><select value={weapon.skill} onChange={(e) => setCombat({ weapons: arrayUpdate(character.combat.weapons, index, { skill: e.target.value }) })} className="min-h-[48px] w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 sm:text-sm">{skillOrder.map((skill) => <option key={skill} value={skill}>{skill}</option>)}</select></label>
+                          <div className="flex items-end gap-2"><button className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => rollWeaponAttack(weapon)}><Dices className="h-4 w-4" /> Attack</button><button className="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-red-600" onClick={() => setCombat({ weapons: character.combat.weapons.filter((_, i) => i !== index) })}><Trash2 className="h-4 w-4" /></button></div>
+                        </div>
+                        <div className="mt-3 grid gap-3 md:grid-cols-[120px_120px_1fr]">
+                          <Input label="Damage" type="number" value={weapon.damage} onChange={(e) => setCombat({ weapons: arrayUpdate(character.combat.weapons, index, { damage: clampNonNegative(e.target.value) }) })} />
+                          <Input label="Wound Mod" type="number" value={weapon.woundMod} onChange={(e) => setCombat({ weapons: arrayUpdate(character.combat.weapons, index, { woundMod: Number(e.target.value) || 0 }) })} />
+                          <Input label="Notes" value={weapon.notes} onChange={(e) => setCombat({ weapons: arrayUpdate(character.combat.weapons, index, { notes: e.target.value }) })} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              </div>
+            ) : null}
+
+            {activeTab === "health" ? (
+              <div className="space-y-6">
+                <Section title="Physical Health" description="Cleaner body silhouette with clickable hit locations and side-panel damage tracking.">
+                  <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+                    <BodySilhouette selected={activeHealthLocation} states={character.combat.hitLocations} onSelect={setActiveHealthLocation} />
+                    <div className="rounded-3xl bg-zinc-950 p-4">
+                      <div className="mb-4 flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-xl font-bold text-white">{hitLocations.find((loc) => loc.key === activeHealthLocation)?.label}</div>
+                          <div className="mt-1 text-sm text-zinc-400">Hit location {hitLocations.find((loc) => loc.key === activeHealthLocation)?.range}</div>
+                        </div>
+                        <select value={selectedLocation.armour} onChange={(e) => setCombat({ hitLocations: { ...character.combat.hitLocations, [activeHealthLocation]: { ...selectedLocation, armour: e.target.value } } })} className="min-h-[44px] rounded-2xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-base text-white outline-none focus:border-emerald-500 sm:text-sm">
+                          {armourOptions.map((option) => <option key={option} value={option}>{option} Armour</option>)}
+                        </select>
+                      </div>
+                      <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-3">
+                        {Array.from({ length: constitutionSlots }).map((_, idx) => {
+                          const filled = selectedLocation.slots[idx];
+                          return <button key={idx} onClick={() => { const slots = [...selectedLocation.slots]; slots[idx] = !slots[idx]; setCombat({ hitLocations: { ...character.combat.hitLocations, [activeHealthLocation]: { ...selectedLocation, slots } } }); }} className={`min-h-[64px] rounded-2xl border px-3 py-3 text-left ${filled ? "border-red-500 bg-red-500/20 text-red-100" : "border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-600"}`}><div className="text-xs uppercase tracking-[0.18em] text-zinc-400">Slot {idx + 1}</div><div className="mt-1 font-semibold">{["Minor", "Significant", "Grievous"][idx % 3]}</div></button>;
+                        })}
+                      </div>
+                      <label className="inline-flex items-center gap-2 text-sm text-zinc-300"><input type="checkbox" checked={selectedLocation.destroyed} onChange={(e) => setCombat({ hitLocations: { ...character.combat.hitLocations, [activeHealthLocation]: { ...selectedLocation, destroyed: e.target.checked } } })} className="h-4 w-4 rounded border-zinc-700 bg-zinc-950 text-emerald-500" /> Location Destroyed</label>
+                      <div className="mt-6">
+                        <div className="mb-3 flex items-center justify-between"><div className="text-sm font-semibold text-white">Grievous wounds for this location</div><button className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => setCombat({ grievousWounds: [...character.combat.grievousWounds, { location: activeHealthLocation, description: "", healTime: "" }] })}><Plus className="h-4 w-4" /> Add</button></div>
+                        <div className="space-y-3">
+                          {locationGrievous.length === 0 ? <div className="rounded-2xl bg-zinc-900 p-4 text-sm text-zinc-500">No grievous wounds logged for this location.</div> : locationGrievous.map((entry, idx) => {
+                            const actualIndex = character.combat.grievousWounds.findIndex((item) => item === entry);
+                            return <div key={idx} className="grid gap-3 rounded-2xl bg-zinc-900 p-4 md:grid-cols-[1fr_160px_auto]"><Input label="Wound" value={entry.description} onChange={(e) => setCombat({ grievousWounds: arrayUpdate(character.combat.grievousWounds, actualIndex, { description: e.target.value }) })} /><Input label="Heal Time" value={entry.healTime} onChange={(e) => setCombat({ grievousWounds: arrayUpdate(character.combat.grievousWounds, actualIndex, { healTime: e.target.value }) })} /><div className="flex items-end"><button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-red-600" onClick={() => setCombat({ grievousWounds: character.combat.grievousWounds.filter((_, i) => i !== actualIndex) })}><Trash2 className="h-4 w-4" /> Remove</button></div></div>;
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Section>
+                <Section title="Mental Health" description="Will determines how many minor, significant, and grievous mental wound slots are available.">
+                  <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+                    <div className="rounded-3xl bg-zinc-950 p-4">
+                      {[["minor", "Minor"], ["significant", "Significant"], ["grievous", "Grievous"]].map(([bucket, label]) => <div key={bucket} className="mb-4 last:mb-0"><div className="mb-2 text-sm font-semibold text-white">{label}</div><div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">{Array.from({ length: willSlots }).map((_, idx) => { const filled = character.mental[bucket][idx]; return <button key={idx} onClick={() => { const next = [...character.mental[bucket]]; next[idx] = !next[idx]; setMental({ [bucket]: next }); }} className={`min-h-[52px] rounded-2xl border px-3 py-3 text-sm ${filled ? "border-purple-400 bg-purple-500/20 text-purple-100" : "border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-600"}`}>{label} {idx + 1}</button>; })}</div></div>)}
+                    </div>
+                    <div className="rounded-3xl bg-zinc-950 p-4 text-sm text-zinc-300"><div className="rounded-2xl bg-zinc-900 p-3">Significant wound penalty: {character.mental.significant.slice(0, willSlots).some(Boolean) ? "-10 active" : "none"}</div><div className="mt-3 rounded-2xl bg-zinc-900 p-3">Grievous wound penalty: {character.mental.grievous.slice(0, willSlots).some(Boolean) ? "-15 active" : "none"}</div></div>
+                  </div>
+                </Section>
+              </div>
+            ) : null}
+
+            {activeTab === "survival" ? (
+              <div className="space-y-6">
+                <Section title="Survival Penalties" description="Numerical penalties from hunger, thirst, sleep, exhaustion, and temperature.">
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                    <div className="rounded-3xl bg-zinc-950 p-4"><div className="mb-2 text-sm font-semibold text-white">Hunger failures</div><NumberStepper value={character.survival.hungerFails} onChange={(value) => setSurvival({ hungerFails: clampNonNegative(value) })} min={0} max={20} /><div className="mt-3 text-sm text-zinc-400">Physical {computed.hungerPhysical} / Non-physical {computed.hungerMental}</div></div>
+                    <div className="rounded-3xl bg-zinc-950 p-4"><div className="mb-2 text-sm font-semibold text-white">Thirst failures</div><NumberStepper value={character.survival.thirstFails} onChange={(value) => setSurvival({ thirstFails: clampNonNegative(value) })} min={0} max={20} /><div className="mt-3 text-sm text-zinc-400">Physical {computed.thirstPhysical} / Non-physical {computed.thirstMental}</div></div>
+                    <div className="rounded-3xl bg-zinc-950 p-4"><div className="mb-2 text-sm font-semibold text-white">Sleep failures</div><NumberStepper value={character.survival.sleepFails} onChange={(value) => setSurvival({ sleepFails: clampNonNegative(value) })} min={0} max={20} /><div className="mt-3 text-sm text-zinc-400">All skills {computed.sleepAll}</div></div>
+                    <div className="rounded-3xl bg-zinc-950 p-4"><div className="mb-2 text-sm font-semibold text-white">Exhaustion penalty</div><NumberStepper value={character.survival.exhaustionPenalty} onChange={(value) => setSurvival({ exhaustionPenalty: clampNonNegative(value) })} min={0} max={60} /><div className="mt-3 text-sm text-zinc-400">Physical only {computed.exhaustionPhysical}</div></div>
+                    <div className="rounded-3xl bg-zinc-950 p-4"><div className="mb-2 text-sm font-semibold text-white">Temperature</div><select value={character.survival.temperature} onChange={(e) => setSurvival({ temperature: e.target.value })} className="min-h-[48px] w-full rounded-2xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-base text-white outline-none focus:border-emerald-500 sm:text-sm">{temperatureOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select><div className="mt-3 text-sm text-zinc-400">All skills {computed.tempAll}</div></div>
+                  </div>
+                </Section>
+              </div>
+            ) : null}
+
+            {activeTab === "inventory" ? (
+              <div className="space-y-6">
+                <Section title="Gear & Wealth" description="Track gear, ammo, and wealth pressure.">
+                  <div className="grid gap-4 xl:grid-cols-2">
+                    <div className="rounded-3xl bg-zinc-950 p-4">
+                      <div className="mb-3 flex items-center justify-between"><div className="text-sm font-semibold text-white">Gear</div><button className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => setInventory({ gear: [...character.inventory.gear, { name: "", qty: 1, notes: "" }] })}><Plus className="h-4 w-4" /> Add</button></div>
+                      <div className="space-y-3">{character.inventory.gear.map((item, index) => <div key={index} className="grid gap-3 rounded-2xl bg-zinc-900 p-4 md:grid-cols-[1fr_100px_1fr_auto]"><Input label="Item" value={item.name} onChange={(e) => setInventory({ gear: arrayUpdate(character.inventory.gear, index, { name: e.target.value }) })} /><Input label="Qty" type="number" value={item.qty} onChange={(e) => setInventory({ gear: arrayUpdate(character.inventory.gear, index, { qty: clampNonNegative(e.target.value) }) })} /><Input label="Notes" value={item.notes} onChange={(e) => setInventory({ gear: arrayUpdate(character.inventory.gear, index, { notes: e.target.value }) })} /><div className="flex items-end"><button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-red-600" onClick={() => setInventory({ gear: character.inventory.gear.filter((_, i) => i !== index) })}><Trash2 className="h-4 w-4" /> Remove</button></div></div>)}</div>
+                    </div>
+                    <div className="rounded-3xl bg-zinc-950 p-4">
+                      <div className="mb-3 flex items-center justify-between"><div className="text-sm font-semibold text-white">Ammo / consumables</div><button className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400" onClick={() => setInventory({ ammo: [...character.inventory.ammo, { type: "", qty: "", notes: "" }] })}><Plus className="h-4 w-4" /> Add</button></div>
+                      <div className="space-y-3">{character.inventory.ammo.map((item, index) => <div key={index} className="grid gap-3 rounded-2xl bg-zinc-900 p-4 md:grid-cols-[1fr_120px_1fr_auto]"><Input label="Type" value={item.type} onChange={(e) => setInventory({ ammo: arrayUpdate(character.inventory.ammo, index, { type: e.target.value }) })} /><Input label="Qty" value={item.qty} onChange={(e) => setInventory({ ammo: arrayUpdate(character.inventory.ammo, index, { qty: e.target.value }) })} /><Input label="Notes" value={item.notes} onChange={(e) => setInventory({ ammo: arrayUpdate(character.inventory.ammo, index, { notes: e.target.value }) })} /><div className="flex items-end"><button className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-white hover:bg-red-600" onClick={() => setInventory({ ammo: character.inventory.ammo.filter((_, i) => i !== index) })}><Trash2 className="h-4 w-4" /> Remove</button></div></div>)}</div>
+                      <div className="mt-4 grid gap-4 md:grid-cols-2"><div><div className="mb-2 text-sm font-semibold text-white">Wealth pressure</div><NumberStepper value={character.inventory.wealthPenalty} onChange={(value) => setInventory({ wealthPenalty: clampNonNegative(value) })} min={0} max={50} /></div><TextArea label="Stash Notes" value={character.inventory.stashNotes} onChange={(e) => setInventory({ stashNotes: e.target.value })} rows={4} /></div>
+                    </div>
+                  </div>
+                </Section>
+              </div>
+            ) : null}
+
+            {activeTab === "notes" ? (
+              <div className="grid gap-6 xl:grid-cols-2">
+                <Section title="Character Notes" description="Appearance, contacts, and session notes."><div className="space-y-4"><TextArea label="Appearance" value={character.notes.appearance} onChange={(e) => setNotes({ appearance: e.target.value })} /><TextArea label="Allies / Factions / NPCs" value={character.notes.allies} onChange={(e) => setNotes({ allies: e.target.value })} /><TextArea label="Session Notes" value={character.notes.sessionNotes} onChange={(e) => setNotes({ sessionNotes: e.target.value })} rows={8} /></div></Section>
+                <Section title="Goals & Campaign Notes" description="Player-facing goals and reminders."><div className="space-y-4"><TextArea label="Goals / Threads" value={character.notes.goals} onChange={(e) => setNotes({ goals: e.target.value })} rows={6} /><div className="rounded-3xl bg-zinc-950 p-4 text-sm text-zinc-300">This version is player-facing only and The Fall focused.</div></div></Section>
+              </div>
+            ) : null}
+          </motion.div>
+
+          <MobileTabBar activeTab={activeTab} setActiveTab={setActiveTab} />
+        </div>
+      ) : null}
+
+      <RollPopup open={Boolean(rollModal && appMode === "sheet")} title={rollModal?.title ?? "Roll"} result={rollModal?.result ?? null} onClose={() => setRollModal(null)} onReroll={rerollSkillCheck} rerollEnabled={Boolean(rollModal && rollModal.kind === "skill" && rollModal.result && !rollModal.result.success && currentSigils > 0)} />
     </div>
   );
 }
