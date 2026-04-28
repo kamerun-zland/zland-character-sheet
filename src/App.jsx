@@ -367,8 +367,7 @@ function buildCharacterFromWizard(wizard) {
   character.profile.handedness = wizard.identity.handedness?.label ?? "";
   character.background.childhood = [wizard.childhood.parents?.label, wizard.childhood.home?.label, wizard.childhood.influence?.label].filter(Boolean).join("\n");
   character.background.teenYears = [wizard.teen.subject?.label, wizard.teen.friend?.label, wizard.teen.turning?.label].filter(Boolean).join("\n");
-  character.background.adulthood = wizard.adulthood.terms.map((term) => `${term.startAge}-${term.endAge}: ${term.career || "Unassigned"}${term.job ? ` / ${term.job}` : ""}`).join("
-");
+  character.background.adulthood = wizard.adulthood.terms.map((term) => `${term.startAge}-${term.endAge}: ${term.career || "Unassigned"}${term.job ? ` / ${term.job}` : ""}`)..join("\\n");
   character.background.freeTime = wizard.finishing.freeTime?.label ?? "";
   character.background.priorities = wizard.finishing.important?.label ?? "";
   character.skills = result.skills;
